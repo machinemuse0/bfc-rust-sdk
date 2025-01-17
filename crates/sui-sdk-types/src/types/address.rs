@@ -1,5 +1,3 @@
-use sha2::Sha256;
-use sha2::Digest;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(
