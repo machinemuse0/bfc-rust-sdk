@@ -2,6 +2,7 @@ use super::CheckpointContentsDigest;
 use super::CheckpointDigest;
 use super::Digest;
 use super::GasCostSummary;
+
 use super::Object;
 use super::SignedTransaction;
 use super::TransactionDigest;
@@ -17,6 +18,7 @@ pub type CheckpointTimestamp = u64;
 pub type EpochId = u64;
 pub type StakeUnit = u64;
 pub type ProtocolVersion = u64;
+
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -73,7 +75,7 @@ pub struct CheckpointSummary {
     pub previous_digest: Option<CheckpointDigest>,
     /// The running total gas costs of all transactions included in the current epoch so far
     /// until this checkpoint.
-    pub epoch_rolling_gas_cost_summary: GasCostSummary,
+    pub epoch_rolling_bfc_gas_cost_summary: GasCostSummary,
 
     /// Timestamp of the checkpoint - number of milliseconds from the Unix epoch
     /// Checkpoint timestamps are monotonic, but not strongly monotonic - subsequent
@@ -269,7 +271,7 @@ mod serialization {
         network_total_transactions: u64,
         content_digest: CheckpointContentsDigest,
         previous_digest: Option<CheckpointDigest>,
-        epoch_rolling_gas_cost_summary: GasCostSummary,
+        epoch_rolling_bfc_gas_cost_summary: GasCostSummary,
         timestamp_ms: CheckpointTimestamp,
         checkpoint_commitments: Vec<CheckpointCommitment>,
         end_of_epoch_data: Option<EndOfEpochData>,
@@ -287,7 +289,7 @@ mod serialization {
                 network_total_transactions,
                 content_digest,
                 previous_digest,
-                epoch_rolling_gas_cost_summary,
+                epoch_rolling_bfc_gas_cost_summary,
                 timestamp_ms,
                 checkpoint_commitments,
                 end_of_epoch_data,
@@ -295,18 +297,20 @@ mod serialization {
             } = self;
 
             if serializer.is_human_readable() {
+
                 let readable = ReadableCheckpointSummaryRef {
                     epoch,
                     sequence_number,
                     network_total_transactions,
                     content_digest,
                     previous_digest,
-                    epoch_rolling_gas_cost_summary,
+                    epoch_rolling_gas_cost_summary: epoch_rolling_bfc_gas_cost_summary,
                     timestamp_ms,
                     checkpoint_commitments,
                     end_of_epoch_data,
                     version_specific_data,
                 };
+
                 readable.serialize(serializer)
             } else {
                 let binary = BinaryCheckpointSummaryRef {
@@ -315,7 +319,7 @@ mod serialization {
                     network_total_transactions,
                     content_digest,
                     previous_digest,
-                    epoch_rolling_gas_cost_summary,
+                    epoch_rolling_gas_cost_summary: epoch_rolling_bfc_gas_cost_summary,
                     timestamp_ms,
                     checkpoint_commitments,
                     end_of_epoch_data,
@@ -350,7 +354,7 @@ mod serialization {
                     network_total_transactions,
                     content_digest,
                     previous_digest,
-                    epoch_rolling_gas_cost_summary,
+                    epoch_rolling_bfc_gas_cost_summary: epoch_rolling_gas_cost_summary,
                     timestamp_ms,
                     checkpoint_commitments,
                     end_of_epoch_data,
@@ -363,19 +367,20 @@ mod serialization {
                     network_total_transactions,
                     content_digest,
                     previous_digest,
-                    epoch_rolling_gas_cost_summary,
+                    epoch_rolling_bfc_gas_cost_summary,
                     timestamp_ms,
                     checkpoint_commitments,
                     end_of_epoch_data,
                     version_specific_data,
                 } = Deserialize::deserialize(deserializer)?;
+
                 Ok(Self {
                     epoch,
                     sequence_number,
                     network_total_transactions,
                     content_digest,
                     previous_digest,
-                    epoch_rolling_gas_cost_summary,
+                    epoch_rolling_bfc_gas_cost_summary: epoch_rolling_bfc_gas_cost_summary,
                     timestamp_ms,
                     checkpoint_commitments,
                     end_of_epoch_data,

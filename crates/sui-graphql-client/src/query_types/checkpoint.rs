@@ -1,6 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::HashMap;
 use chrono::DateTime as ChronoDT;
 use sui_types::types::CheckpointContentsDigest;
 use sui_types::types::CheckpointDigest;
@@ -97,6 +98,8 @@ pub struct Checkpoint {
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(schema = "rpc", graphql_type = "GasCostSummary")]
 pub struct GasCostSummary {
+    pub base_point: Option<BigInt>,
+    pub rate: Option<BigInt>,
     pub computation_cost: Option<BigInt>,
     pub non_refundable_storage_fee: Option<BigInt>,
     pub storage_cost: Option<BigInt>,
@@ -145,7 +148,7 @@ impl TryInto<CheckpointSummary> for Checkpoint {
             timestamp_ms,
             content_digest,
             previous_digest,
-            epoch_rolling_gas_cost_summary,
+            epoch_rolling_bfc_gas_cost_summary: epoch_rolling_gas_cost_summary,
             checkpoint_commitments: vec![],
             end_of_epoch_data: None,
             version_specific_data: vec![],
@@ -156,6 +159,14 @@ impl TryInto<CheckpointSummary> for Checkpoint {
 impl TryInto<NativeGasCostSummary> for GasCostSummary {
     type Error = error::Error;
     fn try_into(self) -> Result<NativeGasCostSummary, Self::Error> {
+        let base_point = self
+            .base_point
+            .ok_or_else(|| Error::from_error(Kind::Other, "Base point is missing"))?
+            .try_into()?;
+        let rate = self
+            .rate
+            .ok_or_else(|| Error::from_error(Kind::Other, "Rate is missing"))?
+            .try_into()?;
         let computation_cost = self
             .computation_cost
             .ok_or_else(|| Error::from_error(Kind::Other, "Computation cost is missing"))?
@@ -173,6 +184,8 @@ impl TryInto<NativeGasCostSummary> for GasCostSummary {
             .ok_or_else(|| Error::from_error(Kind::Other, "Storage rebate is missing"))?
             .try_into()?;
         Ok(NativeGasCostSummary {
+            base_point,
+            rate,
             computation_cost,
             non_refundable_storage_fee,
             storage_cost,
