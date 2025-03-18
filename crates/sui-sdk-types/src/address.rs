@@ -64,8 +64,6 @@ impl Address {
         }
 
 
-        let hex = &hex[2..];
-
         // If the string is too short we'll need to pad with 0's
         if hex.len() < Self::LENGTH * 2 {
             let mut buf = [b'0'; Self::LENGTH * 2];
